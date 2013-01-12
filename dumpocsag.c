@@ -13,14 +13,28 @@
 #include "rtl-sdr.h"
 
 /* POCSAG parameters */
-#define POCSAG_ID           "POCSAG"
-#define POCSAG_SYM_RATE     1200
-#define POCSAG_FM_DEV       4500
-#define POCSAG_SPS          8
+#define POCSAG_ID "POCSAG"
+#define POCSAG_SYM_RATE 1200
+#define POCSAG_FM_DEV 4500
+#define POCSAG_SPS 8
+#define POCSAG_STD_SYNC 0x7cd215d8
+#define POCSAG_STD_IDLE 0x7a89c197
+#define POCSAG_WORDSIZE 32
+#define POCSAG_SOFTTHRESHOLD 2
+#define POCSAG_MAXWORD 16
 
-#define POCSAG_BCH_POLY     0x769
-#define POCSAG_BCH_N        31
-#define POCSAG_BCH_K        21
+/* BCH parameters */
+#define POCSAG_BCH_POLY 0x769
+#define POCSAG_BCH_N 31
+#define POCSAG_BCH_K 21
+
+/* POCASG states */
+#define POCSAG_SEARCH_PREAMBLE_START 0
+#define POCSAG_SEARCH_PREAMBLE_END 1
+#define POCSAG_SYNC 2
+#define POCSAG_SEARCH_SYNC 3
+#define POCSAG_SYNCHED 4
+
 
 int hammingWeight(int n) {
     unsigned int c;
