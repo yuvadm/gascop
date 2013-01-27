@@ -70,7 +70,7 @@ void pocsag_msg_init(struct pocsag_msg *msg) {
 }
 
 int hammingWeight(uint32_t n) {
-    unsigned int c;
+    int c;
     for (c = 0; n; c++)
         n &= n - 1;
     return c;
