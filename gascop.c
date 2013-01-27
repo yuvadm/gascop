@@ -132,6 +132,6 @@ int main(int argc, char **argv) {
     IGNORE(argc);
     IGNORE(argv);
 
-    printf("Dumpocsag v0.1\n");
+    printf("Gascop...\n");
     exit(0);
 }
