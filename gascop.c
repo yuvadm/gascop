@@ -68,13 +68,13 @@ int hammingWeight(uint32_t n) {
     return c;
 }
 
-int evenParity(int n) {
+uint8_t evenParity(uint32_t n) {
     return hammingWeight(n) & 1;
 }
 
-int bchSyndrome(int data, int poly, int n, int k) {
-    int mask = 1 << (n - 1);
-    int coeff = poly << (k - 1);
+uint32_t bchSyndrome(uint32_t data, int poly, int n, int k) {
+    uint32_t mask = 1 << (n - 1);
+    uint32_t coeff = poly << (k - 1);
     n = k;
 
     int s = data >> 1;
@@ -92,7 +92,7 @@ int bchSyndrome(int data, int poly, int n, int k) {
     return s;
 }
 
-int bchFix(int data, int poly, int n, int k) {
+uint32_t bchFix(uint32_t data, int poly, int n, int k) {
     int i, j;
     for (i=0; i<32; i++) {
         int t = data ^ (1 << i);
