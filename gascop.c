@@ -23,6 +23,11 @@
 #define POCSAG_SOFTTHRESHOLD 2
 #define POCSAG_MAXWORD 16
 
+#define POCSAG_ASYNC_BUF_NUMBER 12
+#define POCSAG_DATA_LEN (16*16384) /* 256K */
+#define POCSAG_AUTO_GAIN -100 /* Use automatic gain. */
+#define POCSAG_MAX_GAIN 999999 /* Use max available gain. */
+
 /* BCH parameters */
 #define POCSAG_BCH_POLY 0x769
 #define POCSAG_BCH_N 31
@@ -35,8 +40,28 @@
 #define POCSAG_SEARCH_SYNC 3
 #define POCSAG_SYNCHED 4
 
+#define IGNORE(V) ((void) V)
 
-int hammingWeight(int n) {
+struct {
+    pthread_t reader_thread;
+    pthread_mutex_t data_mutex;     /* Mutex to synchronize buffer access. */
+    pthread_cond_t data_cond;       /* Conditional variable associated. */
+    unsigned char *data;            /* Raw IQ samples buffer */
+    uint16_t *magnitude;            /* Magnitude vector */
+    uint32_t data_len;              /* Buffer length. */
+    int data_ready;                 /* Data ready to be processed. */
+    uint16_t *maglut;               /* I/Q -> Magnitude lookup table. */
+    int exit; 
+
+    /* rtlsdr */
+    int dev_index;
+    int gain;
+    int enable_agc;
+    rtlsdr_dev_t *dev;
+    int freq;
+} Gascop;
+
+int hammingWeight(uint32_t n) {
     unsigned int c;
     for (c = 0; n; c++)
         n &= n - 1;
@@ -84,7 +109,29 @@ int bchFix(int data, int poly, int n, int k) {
     return data;
 }
 
+void rtlsdrCallback(unsigned char *buf, uint32_t len, void *ctx) {
+    IGNORE(ctx);
+
+    pthread_mutex_lock(&Gascop.data_mutex);
+    if (len > Gascop.data_len) len = Gascop.data_len;
+    memcpy(Gascop.data, buf, len);
+    Gascop.data_ready = 1;
+    pthread_cond_signal(&Gascop.data_cond);
+    pthread_mutex_unlock(&Gascop.data_mutex);
+}
+
+void *readerThreadEntryPoint(void *arg) {
+    IGNORE(arg);
+
+    rtlsdr_read_async(Gascop.dev, rtlsdrCallback, NULL,
+        POCSAG_ASYNC_BUF_NUMBER, Gascop.data_len);
+    return NULL;
+}
+
 int main(int argc, char **argv) {
+    IGNORE(argc);
+    IGNORE(argv);
+
     printf("Dumpocsag v0.1\n");
     exit(0);
 }
