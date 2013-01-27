@@ -14,6 +14,7 @@
 #define POCSAG_WORDSIZE 32
 #define POCSAG_SOFTTHRESHOLD 2
 #define POCSAG_MAXWORD 16
+#define POCSAG_MSG_LEN 256
 
 #define POCSAG_ASYNC_BUF_NUMBER 12
 #define POCSAG_DATA_LEN (16*16384) /* 256K */
@@ -52,6 +53,21 @@ struct {
     rtlsdr_dev_t *dev;
     int freq;
 } Gascop;
+
+struct pocsag_msg
+{
+    uint32_t bits;
+    int nb;
+    int nc;
+    char buf[POCSAG_MSG_LEN];
+};
+
+void pocsag_msg_init(struct pocsag_msg *msg) {
+    msg->bits = 0;
+    msg->nb = 0;
+    msg->nc = 0;
+    memset(msg->buf, 0x00, POCSAG_MSG_LEN);
+}
 
 int hammingWeight(uint32_t n) {
     unsigned int c;
