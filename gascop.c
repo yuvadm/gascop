@@ -2,14 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <stdint.h>
-#include <errno.h>
-#include <unistd.h>
-#include <math.h>
-#include <sys/time.h>
-#include <signal.h>
-#include <fcntl.h>
-#include <ctype.h>
 #include "rtl-sdr.h"
 
 /* POCSAG parameters */
