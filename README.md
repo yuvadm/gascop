@@ -10,3 +10,8 @@ Gascop is a lightweight POCSAG decoder for use with [rtl-sdr](http://sdr.osmocom
 
     $ ./gascop
 
+## License
+
+Copyright (c) 2013 by Yuval Adam <yuv.adm@gmail.com> based on work by Salvatore Sanfilippo <antirez@gmail.com>, all rights reserved.
+
+Gascop is free for use and distribution under the BSD license.
