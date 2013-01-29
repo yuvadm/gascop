@@ -34,6 +34,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <errno.h>
 #include "rtl-sdr.h"
 
 /* POCSAG parameters */
@@ -48,6 +49,9 @@
 #define POCSAG_MAXWORD 16
 #define POCSAG_MSG_LEN 256
 
+#define POCSAG_DEFAULT_RATE 2000000
+#define POCSAG_DEFAULT_WIDTH 1000
+#define POCSAG_DEFAULT_HEIGHT 700
 #define POCSAG_ASYNC_BUF_NUMBER 12
 #define POCSAG_DATA_LEN (16*16384) /* 256K */
 #define POCSAG_AUTO_GAIN -100 /* Use automatic gain. */
@@ -149,6 +153,37 @@ uint32_t bchFix(uint32_t data, int poly, int n, int k) {
     return data;
 }
 
+void rtlsdrInit(void) {
+    int device_count = rtlsdr_get_device_count();
+    if (!device_count) {
+        fprintf(stderr, "No rtlsdr devices found.\n");
+        exit(1);
+    }
+
+    printf("Found %d device(s):\n", device_count);
+    char vendor[256], product[256], serial[256];
+    int j;
+    for (j = 0; j < device_count; j++) {
+        rtlsdr_get_device_usb_strings(j, vendor, product, serial);
+        fprintf(stderr, "%d: %s, %s, SN: %s %s\n", j, vendor, product, serial,
+            (j == Gascop.dev_index) ? "(currently selected)" : "");
+    }
+
+    if (rtlsdr_open(&Gascop.dev, Gascop.dev_index) < 0) {
+        fprintf(stderr, "Error opening rtlsdr device: %s\n", strerror(errno));
+        exit(1);
+    }
+
+    rtlsdr_set_tuner_gain_mode(Gascop.dev, 0);  /* auto gain */
+    rtlsdr_set_freq_correction(Gascop.dev, 0);
+    rtlsdr_set_agc_mode(Gascop.dev, 1);
+    rtlsdr_set_center_freq(Gascop.dev, Gascop.freq);
+    rtlsdr_set_sample_rate(Gascop.dev, POCSAG_DEFAULT_RATE);
+    rtlsdr_reset_buffer(Gascop.dev);
+    fprintf(stderr, "Gain reported by device: %.2f\n",
+        rtlsdr_get_tuner_gain(Gascop.dev) / 10.0);
+}
+
 void rtlsdrCallback(unsigned char *buf, uint32_t len, void *ctx) {
     IGNORE(ctx);
 
@@ -168,10 +203,18 @@ void *readerThreadEntryPoint(void *arg) {
     return NULL;
 }
 
-int main(int argc, char **argv) {
-    IGNORE(argc);
-    IGNORE(argv);
+void printUsage() {
+    printf("Usage: ./gascop [options] <frequency Hz>\n\n");
+}
 
-    printf("Gascop...\n");
+int main(int argc, char **argv) {
+    if (argc < 2 || !strcmp(argv[1], "--help")) {
+        printUsage();
+        exit(-1);
+    }
+
+    Gascop.freq = strtoll(argv[1], NULL, 10);
+
+    rtlsdrInit();
     exit(0);
 }
