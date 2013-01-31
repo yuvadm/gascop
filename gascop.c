@@ -153,6 +153,17 @@ uint32_t bchFix(uint32_t data, int poly, int n, int k) {
     return data;
 }
 
+void gascopInit(void) {
+    pthread_mutex_init(&Gascop.data_mutex, NULL);
+    pthread_cond_init(&Gascop.data_cond, NULL);
+    Gascop.data_len = POCSAG_DATA_LEN;
+    Gascop.data_ready = 0;
+    if ((Gascop.data = malloc(Gascop.data_len)) == NULL) {
+        fprintf(stderr, "Out of memory allocating data buffer.\n");
+        exit(1);
+    }
+}
+
 void rtlsdrInit(void) {
     int device_count = rtlsdr_get_device_count();
     if (!device_count) {
@@ -180,7 +191,7 @@ void rtlsdrInit(void) {
     rtlsdr_set_center_freq(Gascop.dev, Gascop.freq);
     rtlsdr_set_sample_rate(Gascop.dev, POCSAG_DEFAULT_RATE);
     rtlsdr_reset_buffer(Gascop.dev);
-    fprintf(stderr, "Gain reported by device: %.2f\n",
+    printf("Gain reported by device: %.2f\n",
         rtlsdr_get_tuner_gain(Gascop.dev) / 10.0);
 }
 
@@ -188,7 +199,8 @@ void rtlsdrCallback(unsigned char *buf, uint32_t len, void *ctx) {
     IGNORE(ctx);
 
     pthread_mutex_lock(&Gascop.data_mutex);
-    if (len > Gascop.data_len) len = Gascop.data_len;
+    if (len > Gascop.data_len)
+        len = Gascop.data_len;
     memcpy(Gascop.data, buf, len);
     Gascop.data_ready = 1;
     pthread_cond_signal(&Gascop.data_cond);
@@ -215,6 +227,34 @@ int main(int argc, char **argv) {
 
     Gascop.freq = strtoll(argv[1], NULL, 10);
 
+    gascopInit();
     rtlsdrInit();
-    exit(0);
+    pthread_create(&Gascop.reader_thread, NULL, readerThreadEntryPoint, NULL);
+    pthread_mutex_lock(&Gascop.data_mutex);
+
+    while (1) {
+        if (!Gascop.data_ready) {
+            pthread_cond_wait(&Gascop.data_cond, &Gascop.data_mutex);
+            continue;
+        }
+        Gascop.data_ready = 0;
+        pthread_cond_signal(&Gascop.data_cond);
+        pthread_mutex_unlock(&Gascop.data_mutex);
+
+        uint32_t j;
+        int i, q;
+        for (j = 0; j < Gascop.data_len; j += 2) {
+            i = Gascop.data[j] - 127;
+            q = Gascop.data[j+1] - 127;
+            if (i < 0) i = -i;
+            if (q < 0) q = -q;
+            printf("I:%d, Q:%d\n", i, q);
+        }
+
+        pthread_mutex_lock(&Gascop.data_mutex);
+        if (Gascop.exit) break;
+    }
+
+    rtlsdr_close(Gascop.dev);
+    return 0;
 }
