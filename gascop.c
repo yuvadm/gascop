@@ -34,6 +34,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <math.h>
 #include <errno.h>
 #include "rtl-sdr.h"
 
@@ -153,6 +154,8 @@ uint32_t bchFix(uint32_t data, int poly, int n, int k) {
     return data;
 }
 
+
+
 void gascopInit(void) {
     pthread_mutex_init(&Gascop.data_mutex, NULL);
     pthread_cond_init(&Gascop.data_cond, NULL);
@@ -242,13 +245,13 @@ int main(int argc, char **argv) {
         pthread_mutex_unlock(&Gascop.data_mutex);
 
         uint32_t j;
-        int i, q;
+        int i, q, ph, m;
         for (j = 0; j < Gascop.data_len; j += 2) {
             i = Gascop.data[j] - 127;
             q = Gascop.data[j+1] - 127;
-            if (i < 0) i = -i;
-            if (q < 0) q = -q;
-            printf("I:%d, Q:%d\n", i, q);
+            m = round(sqrt(i*i + q*q) * 1.4);
+            ph = atan2(q, i) * 10;
+            printf("I:%5d, Q:%5d, M:%5d, P: %5d\n", i, q, m, ph);
         }
 
         pthread_mutex_lock(&Gascop.data_mutex);
