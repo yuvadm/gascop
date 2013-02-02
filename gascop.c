@@ -237,8 +237,7 @@ int main(int argc, char **argv) {
 
     uint32_t j;
     int i, q;
-    // int m;
-    int nph, ph = 5;
+    int nph, ph = 4; /* anything higher than 3 */
     int ph_len = 0;
 
 
@@ -254,17 +253,16 @@ int main(int argc, char **argv) {
         for (j = 0; j < Gascop.data_len; j += 2) {
             i = Gascop.data[j] - 127;
             q = Gascop.data[j+1] - 127;
-            // m = round(sqrt(i*i + q*q) * 1.4);
             nph = atan2(q, i);
-            if ((nph > ph) && (nph - ph > 3) && (ph_len > 7)) {
-                printf("Phase jump from %4d to %4d after %d samples\n", ph, nph, ph_len);
+            if ((nph - ph > 3) && (ph_len > 7)) {
+                printf("Phase jump from %4d to %4d after %4d samples\n", ph, nph, ph_len);
                 ph_len = 0;
             }
             else {
                 ph_len++;
             }
             ph = nph;
-            // printf("I:%5d, Q:%5d, P: %5d\n", i, q, ph);
+            /* printf("I:%5d, Q:%5d, P: %5d\n", i, q, ph); */
         }
 
         pthread_mutex_lock(&Gascop.data_mutex);
