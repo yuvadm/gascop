@@ -77,10 +77,8 @@ struct {
     pthread_mutex_t data_mutex;     /* Mutex to synchronize buffer access. */
     pthread_cond_t data_cond;       /* Conditional variable associated. */
     unsigned char *data;            /* Raw IQ samples buffer */
-    uint16_t *magnitude;            /* Magnitude vector */
     uint32_t data_len;              /* Buffer length. */
     int data_ready;                 /* Data ready to be processed. */
-    uint16_t *maglut;               /* I/Q -> Magnitude lookup table. */
     int exit; 
 
     /* rtlsdr */
