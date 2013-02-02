@@ -235,6 +235,13 @@ int main(int argc, char **argv) {
     pthread_create(&Gascop.reader_thread, NULL, readerThreadEntryPoint, NULL);
     pthread_mutex_lock(&Gascop.data_mutex);
 
+    uint32_t j;
+    int i, q;
+    // int m;
+    int nph, ph = 5;
+    int ph_len = 0;
+
+
     while (1) {
         if (!Gascop.data_ready) {
             pthread_cond_wait(&Gascop.data_cond, &Gascop.data_mutex);
@@ -244,14 +251,20 @@ int main(int argc, char **argv) {
         pthread_cond_signal(&Gascop.data_cond);
         pthread_mutex_unlock(&Gascop.data_mutex);
 
-        uint32_t j;
-        int i, q, ph, m;
         for (j = 0; j < Gascop.data_len; j += 2) {
             i = Gascop.data[j] - 127;
             q = Gascop.data[j+1] - 127;
-            m = round(sqrt(i*i + q*q) * 1.4);
-            ph = atan2(q, i) * 10;
-            printf("I:%5d, Q:%5d, M:%5d, P: %5d\n", i, q, m, ph);
+            // m = round(sqrt(i*i + q*q) * 1.4);
+            nph = atan2(q, i);
+            if ((nph > ph) && (nph - ph > 3) && (ph_len > 7)) {
+                printf("Phase jump from %4d to %4d after %d samples\n", ph, nph, ph_len);
+                ph_len = 0;
+            }
+            else {
+                ph_len++;
+            }
+            ph = nph;
+            // printf("I:%5d, Q:%5d, P: %5d\n", i, q, ph);
         }
 
         pthread_mutex_lock(&Gascop.data_mutex);
