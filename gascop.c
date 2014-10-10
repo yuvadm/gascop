@@ -248,18 +248,28 @@ int main(int argc, char **argv) {
         pthread_cond_signal(&Gascop.data_cond);
         pthread_mutex_unlock(&Gascop.data_mutex);
 
+        /* Up until now we just did lots of threading stuff, now the real fun begins.. */
         for (j = 0; j < Gascop.data_len; j += 2) {
+            /* Translate data into signed IQ values */
             i = Gascop.data[j] - 127;
             q = Gascop.data[j+1] - 127;
+
+            /* Compute the instantaneous phase of the next IQ sample */
             nph = atan2(q, i);
-            if ((nph - ph > 3) && (ph_len > 7)) {
+
+            /* Check if we have completed a full circle by jumping phase, usually -3 -> 3 */
+            /* Also add a high pass filter, anything less than 10 is noise */
+            if ((nph - ph > 3) && (ph_len > 10)){
                 printf("Phase jump from %4d to %4d after %4d samples\n", ph, nph, ph_len);
                 ph_len = 0;
             }
             else {
                 ph_len++;
             }
+
+            /* save the phase for the next iteration */
             ph = nph;
+
             /* printf("I:%5d, Q:%5d, P: %5d\n", i, q, ph); */
         }
 
