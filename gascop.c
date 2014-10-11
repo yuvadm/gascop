@@ -50,7 +50,7 @@
 #define POCSAG_MAXWORD 16
 #define POCSAG_MSG_LEN 256
 
-#define POCSAG_DEFAULT_RATE 2000000
+#define POCSAG_DEFAULT_RATE 1200000
 #define POCSAG_DEFAULT_WIDTH 1000
 #define POCSAG_DEFAULT_HEIGHT 700
 #define POCSAG_ASYNC_BUF_NUMBER 12
@@ -257,10 +257,11 @@ int main(int argc, char **argv) {
             /* Compute the instantaneous phase of the next IQ sample */
             nph = atan2(q, i);
 
-            /* Check if we have completed a full circle by jumping phase, usually -3 -> 3 */
-            /* Also add a high pass filter, anything less than 10 is noise */
-            if ((nph - ph > 3) && (ph_len > 10)){
-                printf("Phase jump from %4d to %4d after %4d samples\n", ph, nph, ph_len);
+            /* Check if we have completed a full circle by jumping phase, usually -2/-3 -> 2/3 */
+            /* Also add a high pass filter, anything less than 30 is noise */
+            if ((nph - ph > 3) && (ph_len > 30)) {
+                /* printf("Phase jump from %4d to %4d after %4d samples\n", ph, nph, ph_len); */
+                printf("%d,", ph_len);
                 ph_len = 0;
             }
             else {
