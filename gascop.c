@@ -235,7 +235,7 @@ int main(int argc, char **argv) {
 
     uint32_t j;
     int i, q;
-    int nph, ph = 4; /* anything higher than 3 */
+    double nph, ph = 3; /* anything higher than 3 */
     int ph_len = 0;
 
 
@@ -255,12 +255,13 @@ int main(int argc, char **argv) {
             q = Gascop.data[j+1] - 127;
 
             /* Compute the instantaneous phase of the next IQ sample */
-            nph = atan2(q, i);
+            /* But take the two point moving average to smooth the signal */
+            nph = (atan2(q, i) / 2) + (ph / 2);
 
-            /* Check if we have completed a full circle by jumping phase, usually -2/-3 -> 2/3 */
+            /* Check if we have completed a full circle by jumping phase */
             /* Also add a high pass filter, anything less than 30 is noise */
-            if ((nph - ph > 3) && (ph_len > 30)) {
-                /* printf("Phase jump from %4d to %4d after %4d samples\n", ph, nph, ph_len); */
+            if ((ph < 0) && (nph > 0) && (ph_len > 30)) {
+                /* printf("Phase jump from %4f to %4f after %4d samples\n", ph, nph, ph_len); */
                 printf("%d,", ph_len);
                 ph_len = 0;
             }
