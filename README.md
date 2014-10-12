@@ -4,6 +4,8 @@ Gascop is a lightweight POCSAG decoder for use with [rtl-sdr](http://sdr.osmocom
 
 Gascop does not use any part of the GNU Radio stack (not that there's anything wrong with it / some of my best friends / etc...), and thus is very easy to build and use.
 
+If you are interested in the theory behind the code, take a look at [the wiki](https://github.com/yuvadm/gascop/wiki/Theory).
+
 ## Build
 
 ```bash
